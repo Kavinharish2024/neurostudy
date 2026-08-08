@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeuroStudy — Study sessions built around how you're performing today</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="scope-line" aria-hidden="true"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <svg class="brand-pulse" viewBox="0 0 120 32" aria-hidden="true">
+      <polyline id="brandPulseLine" points="0,16 20,16 26,6 32,26 38,16 120,16" />
+    </svg>
+    <div class="brand-text">
+      <span class="brand-name">NeuroStudy</span>
+      <span class="brand-tag">measure → personalize → study</span>
+    </div>
+  </div>
+  <nav class="tabs" id="mainTabs">
+    <button class="tab active" data-view="home">Home</button>
+    <button class="tab" data-view="session">New session</button>
+    <button class="tab" data-view="history">History</button>
+  </nav>
+</header>
+
+<main id="app">
+
+  <!-- ============ HOME ============ -->
+  <section class="view active" id="view-home">
+    <div class="hero">
+      <p class="eyebrow">Personal cognitive baseline</p>
+      <h1>How should you study <em>today</em>, specifically?</h1>
+      <p class="hero-sub">NeuroStudy runs a short, real cognitive check before each session, compares it to your own history, and builds the study block around it — not a generic 25-minute timer.</p>
+      <button class="btn-primary" id="startSessionBtn">Start a session →</button>
+    </div>
+
+    <div class="panel-grid">
+      <div class="panel">
+        <span class="panel-label">Sessions logged</span>
+        <span class="panel-value" id="statSessions">0</span>
+      </div>
+      <div class="panel">
+        <span class="panel-label">Focused minutes</span>
+        <span class="panel-value" id="statMinutes">0</span>
+      </div>
+      <div class="panel">
+        <span class="panel-label">Avg. focus rating</span>
+        <span class="panel-value" id="statFocus">—</span>
+      </div>
+      <div class="panel">
+        <span class="panel-label">Reaction baseline</span>
+        <span class="panel-value" id="statBaseline">building</span>
+      </div>
+    </div>
+
+    <div class="home-columns">
+      <div class="card">
+        <h3>Your courses</h3>
+        <div id="courseListHome" class="chip-row"></div>
+        <button class="btn-ghost small" id="manageCoursesBtn">Manage courses</button>
+      </div>
+      <div class="card">
+        <h3>Recent sessions</h3>
+        <div id="recentSessions" class="recent-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SESSION FLOW ============ -->
+  <section class="view" id="view-session">
+
+    <div class="stepper" id="stepper">
+      <div class="step active" data-step="1"><span>01</span>Task</div>
+      <div class="step" data-step="2"><span>02</span>Check</div>
+      <div class="step" data-step="3"><span>03</span>Plan</div>
+      <div class="step" data-step="4"><span>04</span>Study</div>
+      <div class="step" data-step="5"><span>05</span>Review</div>
+    </div>
+
+    <!-- Step 1: Task setup -->
+    <div class="step-panel active" id="step-1">
+      <h2>What are you studying?</h2>
+
+      <label class="field-label">Course</label>
+      <div class="course-select-row">
+        <select id="courseSelect"></select>
+        <button class="btn-ghost small" id="addCourseBtn">+ New course</button>
+      </div>
+
+      <label class="field-label">What kind of work is this?</label>
+      <div class="pill-select" id="taskTypeSelect">
+        <button data-value="problem_solving">Problem solving</button>
+        <button data-value="memorization">Memorization / retrieval</button>
+        <button data-value="reading">Reading comprehension</button>
+        <button data-value="conceptual">Learning new material</button>
+        <button data-value="writing">Writing / synthesis</button>
+        <button data-value="practice_testing">Practice testing</button>
+      </div>
+
+      <label class="field-label">How much time do you have?</label>
+      <div class="time-row">
+        <input type="range" id="timeSlider" min="10" max="120" step="5" value="60">
+        <span class="time-readout"><span id="timeValue">60</span> min</span>
+      </div>
+
+      <button class="btn-primary" id="toStep2Btn">Continue to cognitive check →</button>
+    </div>
+
+    <!-- Step 2: Cognitive check -->
+    <div class="step-panel" id="step-2">
+      <h2>60-second cognitive check</h2>
+      <p class="muted">Two short tasks. Scored only against <em>your own</em> history — never against other people.</p>
+
+      <div class="test-card" id="pvtCard">
+        <div class="test-head">
+          <span class="test-name">Reaction / vigilance</span>
+          <span class="test-count" id="pvtCount">0 / 8</span>
+        </div>
+        <div class="pvt-stage" id="pvtStage">
+          <svg class="pulse-live" viewBox="0 0 400 60" id="pulseLive" aria-hidden="true">
+            <polyline id="pulseLiveLine" points="" />
+          </svg>
+          <button class="pvt-target" id="pvtTarget">Click start</button>
+          <p class="pvt-hint" id="pvtHint">Click the button, then wait for it to turn teal — tap the instant it does.</p>
+        </div>
+      </div>
+
+      <div class="test-card hidden" id="wmCard">
+        <div class="test-head">
+          <span class="test-name">Visual working memory</span>
+          <span class="test-count" id="wmCount">Span 3</span>
+        </div>
+        <div class="wm-stage">
+          <div class="wm-grid" id="wmGrid"></div>
+          <p class="pvt-hint" id="wmHint">Watch the sequence, then repeat it in the same order.</p>
+        </div>
+      </div>
+
+      <div class="test-card hidden" id="checkDoneCard">
+        <p class="done-msg">Check complete. Building your session plan…</p>
+      </div>
+    </div>
+
+    <!-- Step 3: Plan -->
+    <div class="step-panel" id="step-3">
+      <h2>Your session plan</h2>
+      <div class="explain-box" id="planExplain"></div>
+      <div class="blocks-list" id="blocksList"></div>
+      <button class="btn-primary" id="toStudyBtn">Start studying →</button>
+    </div>
+
+    <!-- Step 4: Study/timer -->
+    <div class="step-panel" id="step-4">
+      <div class="study-panel">
+        <p class="eyebrow" id="studyCourseLabel">Course</p>
+        <h2 id="studyBlockLabel">Block 1</h2>
+        <div class="timer-ring-wrap">
+          <svg class="timer-ring" viewBox="0 0 200 200">
+            <circle class="ring-bg" cx="100" cy="100" r="88"/>
+            <circle class="ring-fg" id="ringFg" cx="100" cy="100" r="88"/>
+          </svg>
+          <div class="timer-readout" id="timerReadout">25:00</div>
+        </div>
+        <div class="timer-controls">
+          <button class="btn-ghost" id="pauseBtn">Pause</button>
+          <button class="btn-primary" id="skipBlockBtn">End block →</button>
+        </div>
+        <p class="muted" id="upNext"></p>
+      </div>
+    </div>
+
+    <!-- Step 5: Post-session review -->
+    <div class="step-panel" id="step-5">
+      <h2>Quick check-in</h2>
+      <p class="muted">Under a minute. This is what makes next week's plan better than this week's.</p>
+
+      <label class="field-label">How focused did you feel?</label>
+      <div class="scale-row" id="focusScale">
+        <button data-value="1">1</button><button data-value="2">2</button>
+        <button data-value="3">3</button><button data-value="4">4</button><button data-value="5">5</button>
+      </div>
+
+      <label class="field-label">Did you finish what you planned?</label>
+      <div class="pill-select" id="completionSelect">
+        <button data-value="completely">Completely</button>
+        <button data-value="mostly">Mostly</button>
+        <button data-value="partially">Partially</button>
+        <button data-value="no">No</button>
+      </div>
+
+      <label class="field-label">How did the block length feel?</label>
+      <div class="pill-select" id="lengthSelect">
+        <button data-value="too_short">Too short</button>
+        <button data-value="about_right">About right</button>
+        <button data-value="too_long">Too long</button>
+      </div>
+
+      <button class="btn-primary" id="finishSessionBtn">Save session</button>
+    </div>
+
+  </section>
+
+  <!-- ============ HISTORY ============ -->
+  <section class="view" id="view-history">
+    <h2>Session history</h2>
+    <div id="historyList" class="history-list"></div>
+    <p class="muted" id="historyEmpty">No sessions yet — your first one will show up here.</p>
+  </section>
+
+</main>
+
+<!-- New course modal -->
+<div class="modal-backdrop" id="courseModal">
+  <div class="modal">
+    <h3>Add a course</h3>
+    <input type="text" id="newCourseInput" placeholder="e.g. AP Calculus BC">
+    <div class="modal-actions">
+      <button class="btn-ghost small" id="cancelCourseBtn">Cancel</button>
+      <button class="btn-primary small" id="saveCourseBtn">Add course</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
